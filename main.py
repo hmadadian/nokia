@@ -169,4 +169,4 @@ async def delete_item_json(item: Params):
     return sql.delete_row(**results)
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=5000, log_level="info")
+    uvicorn.run("main:app", host=env.RESTAPI_URL, port=env.RESTAPI_PORT, log_level="info")
