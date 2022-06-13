@@ -15,8 +15,6 @@ from validator import *
 from authentication import *
 import env
 import uvicorn
-import socket
-hostname = socket.gethostname()
 
 sql = SqlInteraction(env.DATABASE_URL, env.TABLE_NAME)
 auth = UserManager()
@@ -27,12 +25,16 @@ origins = ["*"]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True,
                    allow_methods=["*"], allow_headers=["*"])
 
-
-@app.post("/")
-def create_user():
-    return {"host":hostname}
-
 # CRUD + User authentication With normal Query
+
+
+def check_duplication(data):
+    checking_data = data.copy()
+    del checking_data["pic_uri"]
+    if len(sql.get_from_db(**checking_data)) != 0:
+        return True
+    return False
+
 
 @app.post("/user/signup", dependencies=[Depends(JWTBearer())], tags=["User, Query Method"])
 def create_user(username: str, password: str):
@@ -59,6 +61,8 @@ async def data_entry(name: str, price: int, ingredients: str, spicy: bool, vegan
     data = {"name": name, "price": price, "ingredients": ingredients, "spicy": spicy, "vegan": vegan,
             "gluten_free": gluten_free, "description": description, "kcal": kcal, "pic_uri": file_url}
 
+    if check_duplication(data):
+        return {"pod_name": env.HOSTNAME, "status": "# of inserted rows = {}".format(0)}
     return sql.set_in_db(**data)
 
 
@@ -79,14 +83,12 @@ def data_load(name: str | None = None, price: int | None = None, ingredients: st
         data.update({"vegan": vegan})
     if gluten_free:
         data.update({"gluten_free": gluten_free})
-
-    # imporove description with searching inside description cell
     if description:
         data.update({"description": description})
     if kcal:
         data.update({"kcal": kcal})
 
-    return JSONResponse(sql.get_from_db(**data))
+    return {"pod_name": env.HOSTNAME, "result": sql.get_from_db(**data)}
 
 
 @app.post("/update/{items}", dependencies=[Depends(JWTBearer())], tags=["CRUD, Query Method"])
@@ -96,9 +98,9 @@ def data_update(items: Optional[str] = None):
     try:
         validated_items = JsonBody(**item_dict).dict(exclude_none=True)
         if len(validated_items["filter"]) == 0:
-            return {"is_ok": False, "details": "at least one filter should be used"}
+            return {"pod_name": env.HOSTNAME, "is_ok": False, "details": "at least one filter should be used"}
         if len(validated_items["update_params"]) == 0:
-            return {"is_ok": False, "details": "at least one update_params should be used"}
+            return {"pod_name": env.HOSTNAME, "is_ok": False, "details": "at least one update_params should be used"}
         return sql.update_row(validated_items)
     except ValidationError as e:
         return JSONResponse(json.loads(e.json()))
@@ -121,14 +123,12 @@ def delete_item(name: str | None = None, price: int | None = None, ingredients: 
         data.update({"vegan": vegan})
     if gluten_free:
         data.update({"gluten_free": gluten_free})
-
-    # imporove description with searching inside description cell
     if description:
         data.update({"description": description})
     if kcal:
         data.update({"kcal": kcal})
     if len(data) == 0:
-        return {"is_ok": False, "details": "There should be param to remove"}
+        return {"pod_name": env.HOSTNAME, "is_ok": False, "details": "There should be param to remove"}
     return sql.delete_row(**data)
 
 
@@ -148,22 +148,24 @@ def user_login_json(user: UserSchema):
 async def data_entry_json(item: ParamsRequired):
     results = item.dict(exclude_none=True)
     results.update({"pic_uri": None})
+    if check_duplication(results):
+        return {"pod_name": env.HOSTNAME, "status": "# of inserted rows = {}".format(0)}
     return sql.set_in_db(**results)
 
 
 @app.post("/read/json/", dependencies=[Depends(JWTBearer())], tags=["CRUD, JSON Method"])
 def data_load_json(item: Params):
     results = item.dict(exclude_none=True)
-    return JSONResponse(sql.get_from_db(**results))
+    return {"pod_name": env.HOSTNAME, "result": sql.get_from_db(**results)}
 
 
 @app.post("/update/json/", dependencies=[Depends(JWTBearer())], tags=["CRUD, JSON Method"])
 async def update_item_json(item: JsonBody):
     results = item.dict(exclude_none=True)
     if len(results["filter"]) == 0:
-        return {"is_ok": False, "details": "at least one filter should be used"}
+        return {"pod_name": env.HOSTNAME, "is_ok": False, "details": "at least one filter should be used"}
     if len(results["update_params"]) == 0:
-        return {"is_ok": False, "details": "at least one update_params should be used"}
+        return {"pod_name": env.HOSTNAME, "is_ok": False, "details": "at least one update_params should be used"}
     return sql.update_row(results)
 
 

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.inspection import inspect
 from db_structure import DbStructure
 import copy
+import env
 
 
 class SqlInteraction:
@@ -22,7 +23,7 @@ class SqlInteraction:
         fl = self.__structure.FoodList(**kwargs)
         self.__session.add(fl)
         self.__session.commit()
-        return {"status": "# of inserted rows = {}".format(1)}
+        return {"pod_name": env.HOSTNAME, "status": "# of inserted rows = {}".format(1)}
 
     def get_from_db(self, **kwargs):
         fl = self.__session.query(self.__structure.FoodList).filter(
@@ -37,14 +38,14 @@ class SqlInteraction:
             *[getattr(self.__structure.FoodList, k) == v for k, v in information_dict["filter"].items()]
         ).update(information_dict["update_params"])
         self.__session.commit()
-        return {"status": "# of updated rows = {}".format(fl)}
+        return {"pod_name": env.HOSTNAME, "status": "# of updated rows = {}".format(fl)}
 
     def delete_row(self, **kwargs):
         fl = self.__session.query(self.__structure.FoodList).filter(
             *[getattr(self.__structure.FoodList, k) == v for k, v in kwargs.items()]
         ).delete()
         self.__session.commit()
-        return {"status": "# of deleted rows = {}".format(fl)}
+        return {"pod_name": env.HOSTNAME, "status": "# of deleted rows = {}".format(fl)}
 
     def __get_col(self):
         return self.__structure.FoodList.__table__.columns.keys()

@@ -2,7 +2,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Request, HTTPException
 from validator import UserSchema
 from typing import Dict
-import secrets
 import jwt
 import time
 import env
@@ -71,15 +70,15 @@ class UserManager:
     def check_user(self, data: UserSchema):
         for user in self.users:
             if user.username == data.username and user.password == data.password:
-                return {"is_ok": True, "token": self.jwt.jwt_sign(user.username)}
+                return {"pod_name": env.HOSTNAME, "is_ok": True, "token": self.jwt.jwt_sign(user.username)}
         # Status Code
-        return {"is_ok": False}
+        return {"pod_name": env.HOSTNAME, "is_ok": False}
 
     def add_user(self, user: UserSchema):
         for registered_user in self.users:
             if user.username == registered_user.username:
                 # Status Code
-                return {"is_ok": False}
+                return {"pod_name": env.HOSTNAME, "is_ok": False}
         self.users.append(user)
         # Status Code
-        return {"is_ok": True}
+        return {"pod_name": env.HOSTNAME, "is_ok": True}
