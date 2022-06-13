@@ -10,4 +10,4 @@ DATABASE_URL = 'postgresql://' + POSTGRESQL_USERNAME + ':' + POSTGRESQL_PASSWORD
 WEBSERVER_DIR = os.getenv('WEBSERVER_DIR')
 WEBSERVER_URL = os.environ.get('WEBSERVER_URL')
 RESTAPI_URL = os.environ.get('RESTAPI_URL')
-RESTAPI_PORT = os.environ.get('RESTAPI_PORT')
+RESTAPI_PORT = int(os.environ.get('RESTAPI_PORT'))
