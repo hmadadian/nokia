@@ -5,8 +5,9 @@ from typing import Dict
 import secrets
 import jwt
 import time
+import env
 
-JWT_SEC = secrets.token_hex(20)
+JWT_SEC = env.TOKEN_SECRET
 
 class JWTBearer(HTTPBearer):
     def __init__(self, auto_error: bool = True):
