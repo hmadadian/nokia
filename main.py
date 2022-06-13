@@ -15,6 +15,8 @@ from validator import *
 from authentication import *
 import env
 import uvicorn
+import socket
+hostname = socket.gethostname()
 
 sql = SqlInteraction(env.DATABASE_URL, env.TABLE_NAME)
 auth = UserManager()
@@ -25,6 +27,10 @@ origins = ["*"]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True,
                    allow_methods=["*"], allow_headers=["*"])
 
+
+@app.post("/")
+def create_user():
+    return {"host":hostname}
 
 # CRUD + User authentication With normal Query
 
