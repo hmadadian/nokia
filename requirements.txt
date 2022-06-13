@@ -4,3 +4,4 @@ PyJWT==2.4.0
 pytest==7.1.2
 requests==2.27.1
 SQLAlchemy==1.4.37
+uvicorn==0.17.6
