@@ -37,7 +37,6 @@ app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True
 # function for checking duplicated rows
 def check_duplication(data):
     checking_data = data.copy()
-    del checking_data["pic_uri"]
     if len(sql.get_from_db(**checking_data)) != 0:
         return True
     return False
