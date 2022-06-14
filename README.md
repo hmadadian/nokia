@@ -31,9 +31,13 @@ There are 7 files as described below:
 ### 1. Create a virtual environment
 
 A. Create a directory (Folder)
+
 B. Download the source codes and move to the newly created directory in step A (can clone by git)
+
 C. Open a Terminal / Command Prompt / Powershell (based on your OS)
+
 D. Change the directory to the newly created directory in step A
+
 E. Create a venv environment with the below command
 ```
 python -m venv .
