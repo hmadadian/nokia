@@ -83,9 +83,6 @@ Download the DockerFile from this repo
 
 ### 2. Edit Environment Variable
 Modify Environment Variable inside Dockerfile to connect with postgresql.
-```bash
-> python main.py
-```
 
 ### 3. Build image and run.
 ```bash
