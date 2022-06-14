@@ -5,6 +5,7 @@ import env
 Base = declarative_base()
 
 
+# Database Structure as class
 class DbStructure:
     def __init__(self):
         self.base = Base

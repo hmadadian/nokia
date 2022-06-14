@@ -2,16 +2,20 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Request, HTTPException
 from validator import UserSchema
 from typing import Dict
-import jwt
 import time
+import jwt
 import env
 
+# Read Secret
 JWT_SEC = env.TOKEN_SECRET
 
+
+# implement token checker (authentication checker) with Login required fields
 class JWTBearer(HTTPBearer):
     def __init__(self, auto_error: bool = True):
         super(JWTBearer, self).__init__(auto_error=auto_error)
 
+    # check if include Bearer and validate value of it with JWT lib
     async def __call__(self, request: Request):
         credentials: HTTPAuthorizationCredentials = await super(JWTBearer, self).__call__(request)
         if credentials:
@@ -35,6 +39,7 @@ class JWTBearer(HTTPBearer):
         return is_valid
 
 
+# sign and decode JWT payload
 class JWTInit:
     def __init__(self):
         self.JWT_SECRET = JWT_SEC
@@ -56,9 +61,11 @@ class JWTInit:
             return {}
 
 
+# validate user and password / add user and password
 class UserManager:
     def __init__(self):
         self.users = []
+        # load default username and password from auth.txt
         default_credentials_file = open("auth.txt", "r")
         lines = default_credentials_file.readlines()
         username = lines[0].strip()
@@ -71,14 +78,11 @@ class UserManager:
         for user in self.users:
             if user.username == data.username and user.password == data.password:
                 return {"pod_name": env.HOSTNAME, "is_ok": True, "token": self.jwt.jwt_sign(user.username)}
-        # Status Code
         return {"pod_name": env.HOSTNAME, "is_ok": False}
 
     def add_user(self, user: UserSchema):
         for registered_user in self.users:
             if user.username == registered_user.username:
-                # Status Code
                 return {"pod_name": env.HOSTNAME, "is_ok": False}
         self.users.append(user)
-        # Status Code
         return {"pod_name": env.HOSTNAME, "is_ok": True}

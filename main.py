@@ -1,24 +1,30 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi import FastAPI, UploadFile, Depends
+from fastapi import FastAPI, Depends
 from pydantic import ValidationError
 from typing import Optional
-from pathlib import Path
-import string
-import random
-import shutil
-import json
-import os
-from pgsql import SqlInteraction
-from http_2_json import Http2Json
-from validator import *
-from authentication import *
-import env
 import uvicorn
+import json
 
+from http_2_json import Http2Json
+from pgsql import SqlInteraction
+from authentication import *
+from validator import *
+import env
+
+# from fastapi import UploadFile
+# from pathlib import Path
+# import string
+# import random
+# import shutil
+# import os
+
+# Connect to sql class with Database URL and table name
 sql = SqlInteraction(env.DATABASE_URL, env.TABLE_NAME)
+# Authentication
 auth = UserManager()
 
+# execute fastapi as app and run it as middleware.
 app = FastAPI()
 origins = ["*"]
 
@@ -28,6 +34,7 @@ app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True
 # CRUD + User authentication With normal Query
 
 
+# function for checking duplicated rows
 def check_duplication(data):
     checking_data = data.copy()
     del checking_data["pic_uri"]
@@ -36,36 +43,40 @@ def check_duplication(data):
     return False
 
 
+# route for sending post request for create new user with normal http query *Login is Required*
 @app.post("/user/signup", dependencies=[Depends(JWTBearer())], tags=["User, Query Method"])
 def create_user(username: str, password: str):
     return auth.add_user(UserSchema(**{"username": username, "password": password}))
 
 
+# route for sending login request and get tokens with normal http query
 @app.post("/user/login", tags=["User, Query Method"])
 def user_login(username: str, password: str):
     return auth.check_user(UserSchema(**{"username": username, "password": password}))
 
 
+# route for sending post request for create a new row with normal http query *Login is Required*
 @app.post("/create", dependencies=[Depends(JWTBearer())], tags=["CRUD, Query Method"])
 async def data_entry(name: str, price: int, ingredients: str, spicy: bool, vegan: bool, gluten_free: bool,
-                     description: str, kcal: int, file: UploadFile | None = None):
-    file_url = None
-    if file:
-        random_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=15))
-        file_name = random_name + Path(file.filename).suffix
-        directory = env.WEBSERVER_DIR + os.sep + file_name
-        file_url = env.WEBSERVER_URL + "/" + file_name
-        with open(directory, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+                     description: str, kcal: int):
+    # file_url = None
+    # if file:
+    #     random_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=15))
+    #     file_name = random_name + Path(file.filename).suffix
+    #     directory = env.WEBSERVER_DIR + os.sep + file_name
+    #     file_url = env.WEBSERVER_URL + "/" + file_name
+    #     with open(directory, "wb") as buffer:
+    #         shutil.copyfileobj(file.file, buffer)
 
     data = {"name": name, "price": price, "ingredients": ingredients, "spicy": spicy, "vegan": vegan,
-            "gluten_free": gluten_free, "description": description, "kcal": kcal, "pic_uri": file_url}
+            "gluten_free": gluten_free, "description": description, "kcal": kcal}
 
     if check_duplication(data):
         return {"pod_name": env.HOSTNAME, "status": "# of inserted rows = {}".format(0)}
     return sql.set_in_db(**data)
 
 
+# route for sending post request for read row/rows with normal http query *Login is Required*
 @app.post("/read", dependencies=[Depends(JWTBearer())], tags=["CRUD, Query Method"])
 def data_load(name: str | None = None, price: int | None = None, ingredients: str | None = None,
               spicy: bool | None = None, vegan: bool | None = None, gluten_free: bool | None = None,
@@ -91,6 +102,7 @@ def data_load(name: str | None = None, price: int | None = None, ingredients: st
     return {"pod_name": env.HOSTNAME, "result": sql.get_from_db(**data)}
 
 
+# route for sending post request for update row/rows with normal http query *Login is Required*
 @app.post("/update/{items}", dependencies=[Depends(JWTBearer())], tags=["CRUD, Query Method"])
 def data_update(items: Optional[str] = None):
     query = Http2Json()
@@ -106,6 +118,7 @@ def data_update(items: Optional[str] = None):
         return JSONResponse(json.loads(e.json()))
 
 
+# route for sending post request for delete row/rows with normal http query *Login is Required*
 @app.post("/delete", dependencies=[Depends(JWTBearer())], tags=["CRUD, Query Method"])
 def delete_item(name: str | None = None, price: int | None = None, ingredients: str | None = None,
                 spicy: bool | None = None, vegan: bool | None = None, gluten_free: bool | None = None,
@@ -134,16 +147,19 @@ def delete_item(name: str | None = None, price: int | None = None, ingredients: 
 
 # CRUD + UserAuthorization With JSON Requests
 
+# route for sending post request for create a new user with json *Login is Required*
 @app.post("/user/signup/json/", dependencies=[Depends(JWTBearer())], tags=["User, JSON Method"])
 def create_user_json(user: UserSchema):
     return auth.add_user(user)
 
 
+# route for sending post request for login user with json
 @app.post("/user/login/json/", tags=["User, JSON Method"])
 def user_login_json(user: UserSchema):
     return auth.check_user(user)
 
 
+# route for sending post request for create a new row with json *Login is Required*
 @app.post("/create/json/", dependencies=[Depends(JWTBearer())], tags=["CRUD, JSON Method"])
 async def data_entry_json(item: ParamsRequired):
     results = item.dict(exclude_none=True)
@@ -153,12 +169,14 @@ async def data_entry_json(item: ParamsRequired):
     return sql.set_in_db(**results)
 
 
+# route for sending post request for read row/rows with json *Login is Required*
 @app.post("/read/json/", dependencies=[Depends(JWTBearer())], tags=["CRUD, JSON Method"])
 def data_load_json(item: Params):
     results = item.dict(exclude_none=True)
     return {"pod_name": env.HOSTNAME, "result": sql.get_from_db(**results)}
 
 
+# route for sending post request for update row/rows with json *Login is Required*
 @app.post("/update/json/", dependencies=[Depends(JWTBearer())], tags=["CRUD, JSON Method"])
 async def update_item_json(item: JsonBody):
     results = item.dict(exclude_none=True)
@@ -169,6 +187,7 @@ async def update_item_json(item: JsonBody):
     return sql.update_row(results)
 
 
+# route for sending post request for delete row/rows with json *Login is Required*
 @app.post("/delete/json/", dependencies=[Depends(JWTBearer())], tags=["CRUD, JSON Method"])
 async def delete_item_json(item: Params):
     results = item.dict(exclude_none=True)

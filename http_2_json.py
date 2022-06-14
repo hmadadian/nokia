@@ -1,7 +1,7 @@
 import requests
 import json
 
-
+# convert query dicts filter[name] and ... to json and dict with helm of convertonline.io
 class Http2Json:
     def __init__(self):
         self.__headers = {

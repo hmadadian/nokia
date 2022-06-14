@@ -2,6 +2,7 @@ import os
 import configparser
 import socket
 
+# get data from environment variables or if its not set get it from env.txt
 
 parser = configparser.ConfigParser()
 parser.read("env.txt")

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 
+# validator class for fastapi data validation
 class Params(BaseModel):
     name: str | None = None
     price: int | None = None

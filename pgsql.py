@@ -14,17 +14,20 @@ class SqlInteraction:
         self.__structure = DbStructure()
         base = self.__structure.return_base()
         insp = inspect(self.__engine)
+        # create table if it is not already created
         if not insp.has_table(table_name):
             base.metadata.create_all(self.__engine)
         self.__session = Session(self.__engine)
         self.test = test
 
+    # add data to db
     def set_in_db(self, **kwargs):
         fl = self.__structure.FoodList(**kwargs)
         self.__session.add(fl)
         self.__session.commit()
         return {"pod_name": env.HOSTNAME, "status": "# of inserted rows = {}".format(1)}
 
+    # get data from db
     def get_from_db(self, **kwargs):
         fl = self.__session.query(self.__structure.FoodList).filter(
                 *[getattr(self.__structure.FoodList, k) == v for k, v in kwargs.items()]
@@ -33,6 +36,7 @@ class SqlInteraction:
         self.__session.commit()
         return new_fl if self.test else self.__db_to_dict(new_fl)
 
+    # update data in db
     def update_row(self, information_dict):
         fl = self.__session.query(self.__structure.FoodList).filter(
             *[getattr(self.__structure.FoodList, k) == v for k, v in information_dict["filter"].items()]
@@ -40,6 +44,7 @@ class SqlInteraction:
         self.__session.commit()
         return {"pod_name": env.HOSTNAME, "status": "# of updated rows = {}".format(fl)}
 
+    # delete data from db
     def delete_row(self, **kwargs):
         fl = self.__session.query(self.__structure.FoodList).filter(
             *[getattr(self.__structure.FoodList, k) == v for k, v in kwargs.items()]
@@ -47,9 +52,11 @@ class SqlInteraction:
         self.__session.commit()
         return {"pod_name": env.HOSTNAME, "status": "# of deleted rows = {}".format(fl)}
 
+    # get db columns
     def __get_col(self):
         return self.__structure.FoodList.__table__.columns.keys()
 
+    # convert db_obj to dict
     def __db_to_dict(self, obj):
         result = list()
         cols = self.__get_col()
