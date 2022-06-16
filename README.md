@@ -1,5 +1,5 @@
 # Introduction
-Based on the task that Mr. Bence Haller from Nokia in Hungary sent me, I should develop a rest API service running in Kubernetes for CRUD operations executed on the meals table. Meals contain name, price, ingredients, spicy, vegan, gluten free, description and kcal. 
+Based on the task from Nokia in Hungary sent me, I should develop a rest API service running in Kubernetes for CRUD operations executed on the meals table. Meals contain name, price, ingredients, spicy, vegan, gluten free, description and kcal. 
 
 So I developed an application that is a bit more dynamic, which can send a request throw a standard POST request query or in JSON format within the request body. Also, it can filter the result/update/delete with single or multiple conditions. My solution also includes authentication and an HA solution.
 
